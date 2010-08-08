@@ -45,6 +45,7 @@ class Server(db.Model):
 	falsepositivecheck = db.BooleanProperty("Prevent single bad result from triggering notifications",default=False)
 	parser = db.StringProperty("Parser")
 	parserstatus = db.BooleanProperty("Parser status", default=True)
+	parsermetadata = db.StringProperty("Parser metadata", multiline=False)
 	uptime = db.StringProperty("Uptime")
 	lastmonitor = db.DateTimeProperty("Last time monitor ran")
 	
