@@ -78,6 +78,10 @@ margin:0 auto;
 	padding: 5px;
 }
 
+#adminserverlist table {
+	width: 100%;
+}
+
 #adminserverlist table thead {
 	background: lightgray;
 }
