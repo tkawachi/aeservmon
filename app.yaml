@@ -1,5 +1,5 @@
-application: adamghill
-version: 2
+application: networkpie-uptime
+version: 3
 runtime: python
 api_version: 1
 
@@ -39,5 +39,11 @@ handlers:
   script: frontpage.py
   login: admin
 
+builtins:
+- appstats: on
 
+admin_console:
+ pages:
+ - name: Appstats
+   url: /_ah/stats
 

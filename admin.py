@@ -104,7 +104,8 @@ class StoreAdminOptions(webapp.RequestHandler):
         
 def main():
 	application = webapp.WSGIApplication([('/admin/storeserver', StoreServer),('/admin/deleteserver', DeleteServer),('/admin/storeadminoptions', StoreAdminOptions),('/admin', Admin)],debug=True)
-	wsgiref.handlers.CGIHandler().run(application)
+	#wsgiref.handlers.CGIHandler().run(application)
+	run_wsgi_app(application)
 	
 
 def getServer(self):

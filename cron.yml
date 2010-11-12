@@ -1,8 +1,8 @@
 cron:
 - description: checking servers
   url: /checkservers
-  schedule: every 30 minutes
+  schedule: every 2 minutes
 
 - description: maintenance
   url: /maintenance 
-  schedule: every 50 minutes
+  schedule: every 20 minutes

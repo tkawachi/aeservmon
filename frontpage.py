@@ -30,6 +30,7 @@ from datetime import datetime
 import os
 from models import Server
 from google.appengine.ext import webapp
+from google.appengine.ext.webapp.util import run_wsgi_app
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext.webapp import template
@@ -46,7 +47,8 @@ class MainHandler(webapp.RequestHandler):
 def main():
   application = webapp.WSGIApplication([('/', MainHandler)],
                                        debug=True)
-  wsgiref.handlers.CGIHandler().run(application)
+  #wsgiref.handlers.CGIHandler().run(application)
+  run_wsgi_app(application)
 
 
 if __name__ == '__main__':

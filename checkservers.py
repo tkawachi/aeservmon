@@ -37,17 +37,15 @@ import datetime
 import time
 import logging
 import wsgiref.handlers
-import logging
-import re
+import pprint
 
-from django.utils import simplejson
 from models import Server, AdminOptions
-import prowlpy
-#import twitter
+from asyncurlfm import AsyncURLFetchManager
 
 class CheckServers(webapp.RequestHandler):
 	serverlist = db.GqlQuery("SELECT * FROM Server")
 	adminoptions = AdminOptions.get_by_key_name('credentials')
+	asyncfm = AsyncURLFetchManager()
     
 	def updateuptime(self, server):
 		now = time.mktime(datetime.datetime.now().timetuple())
@@ -70,7 +68,6 @@ class CheckServers(webapp.RequestHandler):
 			string += str(minutes) + "m "
 		string += str(seconds) + "s"
 		server.uptime = string
-		server.put()
  
 	def serverisup(self, server, responsecode):
 		if server.status == False:
@@ -101,18 +98,21 @@ class CheckServers(webapp.RequestHandler):
 
 	def servercameback(self, server):
 		server.timeservercameback = datetime.datetime.now()
-
+		
 	def testserver(self, server):
 		if server.ssl:
 			prefix = "https://"	
 		else:
 			prefix = "http://"
+		server.lastmonitor = datetime.datetime.now()
+		url = prefix + "%s" % server.serverdomain
+		logging.debug('Fetch url: %s.' % server.serverdomain)
+		self.asyncfm.fetch_asynchronously(url, deadline=10, callback=self.processserver, cb_args=[server], headers = {'Cache-Control' : 'max-age=30'})
+		
+	def processserver(self, rpc, server):
 		try:
-			server.lastmonitor = datetime.datetime.now()
-			url = prefix + "%s" % server.serverdomain
-			logging.debug('Fetch url: %s.' % server.serverdomain)
-			response = urlfetch.fetch(url, headers = {'Cache-Control' : 'max-age=30'}, deadline=10 )
-		except DownloadError:
+			response = rpc.get_result()
+		except DownloadError, e:
 			if server.falsepositivecheck:
 				logging.error('Download error. Check the url.')
 				self.serverisdown(server,000)
@@ -123,58 +123,13 @@ class CheckServers(webapp.RequestHandler):
 				logging.error('500')
 				self.serverisdown(server, response.status_code)
 			else:
-				if server.parser == "json":
-					self.parsejson(server, response)
-				elif server.parser == "startswith":
-					self.parsestartswith(server, response)
-				elif server.parser == "regex":
-					self.parseregex(server, response)
-				elif server.parser == "endswith":
-					self.parseendswith(server, response)
-				elif server.parser == "contains":
+				if server.parser == "contains":
 					self.parsecontains(server, response)
 				else:
 					self.serverisup(server, response.status_code)
-					
-	def parsejson(self, server, response):
-		try:
-			simplejson.loads(response.content)
-			server.parserstatus = True
-			self.serverisup(server, response.status_code)
-		except Exception, e:
-			logging.error(e)
-			server.parserstatus = False
-			self.serverisdown(server, response.status_code)
-			
-	def parseendswith(self, server, response):
-		if unicode(response.content, errors='ignore').endswith(server.parsermetadata):
-			server.parserstatus = True
-			self.serverisup(server, response.status_code)
-		else:
-			server.parserstatus = False
-			self.serverisdown(server, response.status_code)
-
-	def parsestartswith(self, server, response):
-		if unicode(response.content, errors='ignore').startswith(server.parsermetadata):
-			server.parserstatus = True
-			self.serverisup(server, response.status_code)
-		else:
-			server.parserstatus = False
-			self.serverisdown(server, response.status_code)
 			
 	def parsecontains(self, server, response):
 		if unicode(response.content, errors='ignore').find(server.parsermetadata) > -1:
-			server.parserstatus = True
-			self.serverisup(server, response.status_code)
-		else:
-			server.parserstatus = False
-			self.serverisdown(server, response.status_code)
-
-	def parseregex(self, server, response):
-		logging.debug('try to match: %s' % server.parsermetadata)
-		logging.debug(re.match(server.parsermetadata, unicode(response.content, errors='ignore')))
-		
-		if re.match(server.parsermetadata, unicode(response.content, errors='ignore')):
 			server.parserstatus = True
 			self.serverisup(server, response.status_code)
 		else:
@@ -190,31 +145,16 @@ class CheckServers(webapp.RequestHandler):
 		message.send()
 		server.notifylimiter = True
 		server.put()
-					
-	def notifytwitter(self, server):
-		pass
-		#api = twitter.Api(username="%s" % self.adminoptions.twitteruser , password="%s" % self.adminoptions.twitterpass)
-		#api.PostDirectMessage(self.adminoptions.twitteruser, "%s is down" % server.serverdomain)
-		#server.notifylimiter = True
-		#server.put()
-		
-	def notifyprowl(self,server):
-		prowlkey = self.adminoptions.prowlkey
-		prowlnotifier = prowlpy.Prowl(prowlkey)
-		try:
-			prowlnotifier.add('Server Monitor','Server %s is Down' % server.serverdomain, 'error code %s http://ping.magnetised.net/' % server.responsecode)
-		except:
-			logging.error('prowl notify failed, you may need to check your API key')
-		server.notifylimiter = True
-		server.put()
                 
 	def get(self):
 		for server in self.serverlist:
 			self.testserver(server)
+		self.asyncfm.wait()
             
 def main():
 	application = webapp.WSGIApplication([('/checkservers', CheckServers)],debug=True)
-	wsgiref.handlers.CGIHandler().run(application)
+	#wsgiref.handlers.CGIHandler().run(application)
+	run_wsgi_app(application)
 
 
 if __name__ == '__main__':

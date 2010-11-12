@@ -90,15 +90,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
       <div id="entry">
         <h4>Parser</h4>
-        <select name="parser" id="parser" onChange="if ($('#parser').val() == 'regex' || $('#parser').val() == 'contains') { $('#parsermetadata').show(); } else { $('#parsermetadata').hide(); }">
+        <select name="parser" id="parser" onChange="if ($('#parser').val() == 'contains') { $('#parsermetadata').show(); } else { $('#parsermetadata').hide(); }">
           <option value="none">None</option>
-          <!--option value="html">HTML</option-->
-          <option value="json">JSON</option>
-          <!--option value="xml">XML</option-->
-          <!--option value="atom">ATOM</option-->
-          <!--option value="rss">RSS</option-->
           <option value="contains">Contains</option>
-          <!--option value="regex">Regex</option-->
         </select>
         <br />
         <input type="text" id="parsermetadata" name="parsermetadata" size="50" style="display: none"></input>
@@ -109,12 +103,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <table id="notifications">
           <thead>
             <tr>
-              <td>Prowl</td>
               <td>Email</td>
             </tr>
           </thead>
           <tr>
-            <td><input type="checkbox" name="notifywithprowl" value="True" /></td>
             <td><input type="checkbox" name="notifywithemail" value="True" /></td>
           </tr>
         </table>
@@ -127,45 +119,5 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   </div>
 </fieldset>
 <br/>
-
-<fieldset>
-  <legend>
-    Edit administrative options
-  </legend>
-
-  <!---Current twitter username: {{ twitteruser }}<br/>--->
-  <!---Current twitter password: {{ twitterpass }}<br/>--->
-
-  <div id="prowlapiline">
-    {% if adminoptions.prowlkeyisvalid %}
-      Current prowl API key: {{ prowlkey }}
-    {% endif %}
-  </div>
-
-  <div id="form">
-    <form action="/admin/storeadminoptions" method="post">
-      <!---<div id="entry">Twitter Username: <textarea name="twitteruser" rows="1" cols="35"></textarea></div>--->
-      <!---<div id="entry">Twitter Password: <textarea name="twitterpass" rows="1" cols="35"></textarea></div>--->
-      
-      <div id="entry">
-        <h4>
-          {% if adminoptions.prowlkeyisvalid %}
-            Update
-          {% else %}
-            Add
-          {% endif %}
-          
-          Prowl API key
-        </h4>
-        
-        <input type="text" name="prowlkey" size="50"></input>
-      </div>
-      
-      <div id="button">
-        <input type="submit" value="Update Options">
-      </div>
-    </form>
-  </div>
-</fieldset>
 
 {% endblock %}
