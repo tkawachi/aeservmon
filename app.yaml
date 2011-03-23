@@ -1,4 +1,4 @@
-application: aeservmon
+application: rileys-status
 version: 1
 runtime: python
 api_version: 1
