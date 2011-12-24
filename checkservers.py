@@ -119,8 +119,8 @@ class CheckServers(webapp.RequestHandler):
 			else:
 				server.falsepositivecheck = True
 		else:
-			if response.status_code == 500:
-				logging.error('500')
+			if response.status_code / 100 in (4, 5):  # 4xx/5xx are errors
+				logging.error(response.status_code)
 				self.serverisdown(server, response.status_code)
 			else:
 				if server.parser == "contains":
