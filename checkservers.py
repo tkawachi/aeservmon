@@ -118,6 +118,7 @@ class CheckServers(webapp.RequestHandler):
 				self.serverisdown(server,000)
 			else:
 				server.falsepositivecheck = True
+				server.put()
 		else:
 			if response.status_code / 100 in (4, 5):  # 4xx/5xx are errors
 				logging.error(response.status_code)
